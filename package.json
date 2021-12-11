@@ -1,0 +1,29 @@
+{
+  "name": "tamahagane-cnft-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.mjs"
+  },
+  "author": "Alicia Basilio",
+  "license": "ISC",
+  "dependencies": {
+    "@blockfrost/blockfrost-js": "^2.0.2",
+    "@emurgo/cardano-serialization-lib-browser": "10.0.0-beta.8",
+    "@emurgo/cardano-serialization-lib-nodejs": "10.0.0-beta.8",
+    "axios": "^0.24.0",
+    "bip39": "^3.0.4",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "i": "^0.3.7",
+    "ipfs-api": "^26.1.2",
+    "npm": "^8.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
