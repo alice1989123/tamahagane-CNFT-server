@@ -1,12 +1,13 @@
 import { materialsURL } from "./Constants/assetsURLS.mjs";
 import { MintTx } from "./mintRawMaterials.mjs";
-import { metadataBuilder } from "./Lib/Wallet.mjs";
-import { AssetName } from "@emurgo/cardano-serialization-lib-nodejs";
+import { initTx } from "./Lib/Wallet.mjs";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-const numberofAssets = 20;
+const ProtocolParameters = await initTx();
+const ttl = ProtocolParameters.slot + 20000;
+const numberofAssets = 30;
 const assetsGenerator = function (baseName, rawmetadata) {
   let assets = [];
   let metadatas = {};
@@ -20,7 +21,7 @@ const assetsGenerator = function (baseName, rawmetadata) {
   return { assets, metadatas };
 };
 
-async function Mint() {
+async function Mint(ttl) {
   for (let i = 0; i < materialsURL.length; i++) {
     const baseName = materialsURL[i][0];
     const URL = materialsURL[i][1];
@@ -31,7 +32,7 @@ async function Mint() {
       rawmetadataBuilder(description, "image/png", URL)
     );
 
-    MintTx(assets);
+    MintTx(assets, ttl);
     await sleep(60000);
   }
 }
@@ -49,8 +50,4 @@ const rawmetadataBuilder = function (description, mediaType, src) {
     mediaType: mediaType,
   };
 };
-const test = assetsGenerator(
-  "lala",
-  rawmetadataBuilder("description", "mediaType", "src")
-);
-Mint();
+Mint(ttl);

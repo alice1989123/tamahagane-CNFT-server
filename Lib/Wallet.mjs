@@ -320,7 +320,7 @@ export async function sendingCards(
   };
   const check = true; //await checkTx(txHashClient, buyOption);
   if (check === true) {
-    const policyid = "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a781";
+    const policyid = "d22af577e8e309cc677e273f646bed7bfeb92816e56ee238f14ffd2c";
 
     const randomSelect = function (n, array) {
       const shuffled = array.sort(function () {
@@ -335,6 +335,7 @@ export async function sendingCards(
     const clientAddress = CardanoWasm.Address.from_bech32(address); // Client direction
     const tokensbyId = await getTokensbyPolicyId(serverAddressBech32, policyid);
     const selectedTokens = randomSelect(7, tokensbyId);
+    //console.log(selectedTokens);
 
     const utxosServer = await getUtxos(serverAddressBech32);
     console.log(`this is the leght of the utxo array ${utxosServer.length}`);
@@ -351,11 +352,11 @@ export async function sendingCards(
 
     const valueTokens = amountToValue(selectedTokens);
 
-    let minAda = CardanoWasm.Value.new(CardanoWasm.BigNum.from_str("0"));
+    let minAda = CardanoWasm.Value.new(CardanoWasm.BigNum.from_str("2000000"));
 
     const outPutClient_ = CardanoWasm.TransactionOutput.new(
       clientAddress,
-      minAda
+      minAda.checked_add(valueTokens)
     );
     let outPutsClient_ = CardanoWasm.TransactionOutputs.new();
     outPutsClient_.add(outPutClient_);
@@ -405,13 +406,13 @@ const ValuetoAmount = function (value) {
   amount.push({ unity: "lovelace", quantity: coin });
   if (value.multiasset()) {
     const multiAssets = value.multiasset().keys();
-    console.log(multiAssets.len());
+    //console.log(multiAssets.len());
     for (let j = 0; j < multiAssets.len(); j++) {
       const policy = multiAssets.get(j);
       const policyAssets = value.multiasset().get(policy);
       const assetNames = policyAssets.keys();
       for (let k = 0; k < assetNames.len(); k++) {
-        console.log(assetNames.len());
+        //console.log(assetNames.len());
         const assetPolicy = Buffer.from(policy.to_bytes()).toString("hex"); // hex encoded policy
         const assetName = Buffer(
           Buffer.from(assetNames.get(k).name(), "hex").toString(),
@@ -732,3 +733,71 @@ export async function createLockingPolicyScript(address, protocolParameters) {
   ).toString("hex");
   return { id: policyId, script: finalScript, ttl };
 }
+/* 
+const selectedTokens = [
+  {
+    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3139",
+    quantity: "1",
+  },
+  {
+    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3138",
+    quantity: "1",
+  },
+  {
+    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d32",
+    quantity: "1",
+  },
+  {
+    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3132",
+    quantity: "1",
+  },
+  {
+    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3131",
+    quantity: "1",
+  },
+  {
+    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3133",
+    quantity: "1",
+  },
+  {
+    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d35",
+    quantity: "1",
+  },
+];
+
+const clientAddress = CardanoWasm.Address.from_bech32(
+  "addr_test1qrz0vszy8g52dnc0had0h9h9utza0hdr4yyqlylaas6asg3an0wycuczcr26vyv429qu6exsq6sjwd70h5npewawn9qs6gxrw3"
+);
+const utxosServer = await getUtxos(process.env.ADDRESS);
+
+const valueTokens = amountToValue(selectedTokens);
+
+let minAda = CardanoWasm.Value.new(
+  CardanoWasm.BigNum.from_str("3000000")
+).checked_add(valueTokens);
+
+const outPutClient_ = CardanoWasm.TransactionOutput.new(clientAddress, minAda);
+let outPutsClient_ = CardanoWasm.TransactionOutputs.new();
+outPutsClient_.add(outPutClient_);
+
+const protocolParameters = await initTx();
+
+CoinSelection.setProtocolParameters(
+  protocolParameters.minUtxo,
+  protocolParameters.coinsPerUtxoWord,
+  protocolParameters.linearFee.minFeeA,
+  protocolParameters.linearFee.minFeeB,
+  protocolParameters.maxTxSize
+);
+const selectionServer = await CoinSelection.randomImprove(
+  utxosServer,
+  outPutsClient_,
+  20
+); */
+
+/* const selecedutxos = async function (selectedTokens, utxos) {
+  const outputs = utxos.map((x) => ValuetoAmount(x.output().amount()));
+  console.log(outputs);
+  return utxos;
+}; */
+// console.log(a);

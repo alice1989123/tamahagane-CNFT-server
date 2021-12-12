@@ -194,7 +194,7 @@ export async function mintTx(
     protocolParameters.maxTxSize
   );
 
-  const selection = await CoinSelection.randomImprove(utxos, _outputs, 20); //there is some issue with the selection algorithm!!!
+  const selection = await CoinSelection.randomImprove(utxos, _outputs, 25); //there is some issue with the selection algorithm!!!
 
   const nativeScripts = CardanoWasm.NativeScripts.new();
   nativeScripts.add(policy.script);
@@ -330,15 +330,15 @@ export async function mintTx(
     rawTx.auxiliary_data()
   );
 
-  const size = transaction.to_bytes().length * 2;
+  const size = transaction.to_bytes().length;
   if (size > protocolParameters.maxTxSize) throw ERROR.txTooBig;
 
   return transaction;
 }
 
-export async function MintTx(assetsWithMetada) {
+export async function MintTx(assetsWithMetada, ttl) {
   const protocolParameters = await initTx();
-  const policy = await createLockingPolicyScript();
+  const policy = await createLockingPolicyScript(ttl);
 
   const metadata = { [policy.id]: assetsWithMetada.metadatas };
   const assets = assetsWithMetada.assets;
@@ -371,9 +371,9 @@ export async function MintTx(assetsWithMetada) {
   }
   // const metadata = METADATA
 }
-export async function createLockingPolicyScript() {
+export async function createLockingPolicyScript(ttl) {
+  console.log(ttl);
   const protocolParameters = await initTx();
-  const ttl = protocolParameters.slot + 1000;
 
   const address = addressBench32_1;
 

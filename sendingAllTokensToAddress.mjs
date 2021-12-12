@@ -65,7 +65,7 @@ async function sendTokens(sender, reciver) {
 
   // value.set_coin(minAda); Ideally we should use minada
 
-  value.set_coin(CardanoWasm.BigNum.from_str("12000000"));
+  value.set_coin(CardanoWasm.BigNum.from_str("18000000"));
 
   const outPut = CardanoWasm.TransactionOutput.new(
     shelleyReciverAddress,
@@ -87,9 +87,10 @@ async function sendTokens(sender, reciver) {
     protocolParameters.maxTxSize
   );
 
-  const selection = await CoinSelection.randomImprove(utxos, outPuts, 20); // Something is not working with the coin selection algorithm!! Must check it!
-
-  selection.input.forEach((input) => {
+  // const selection = await CoinSelection.randomImprove(utxos, outPuts, 20); // Something is not working with the coin selection algorithm!! Must check it!
+  const selection = utxos;
+  console.log(selection);
+  selection.forEach((input) => {
     txBuilder.add_input(
       CardanoWasm.Address.from_bech32(addressBench32_1),
       input.input(),
