@@ -20,7 +20,7 @@ const accountKey = rootKey
   .derive(harden(1815)) // coin type
   .derive(harden(0)); // account #0
 
-const utxoPubKey = accountKey
+export const utxoPubKey = accountKey
   .derive(0) // external
   .derive(0)
   .to_public();

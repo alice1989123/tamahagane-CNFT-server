@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 import { Buffer } from "safe-buffer";
 
 dotenv.config();
-const baseAddr = process.env.ADDRESS;
+export const baseAddr = process.env.ADDRESS;
 
 export const BlockFrost = new BlockFrostAPI({
   isTestnet: true,
@@ -320,7 +320,7 @@ export async function sendingCards(
   };
   const check = true; //await checkTx(txHashClient, buyOption);
   if (check === true) {
-    const policyid = "d22af577e8e309cc677e273f646bed7bfeb92816e56ee238f14ffd2c";
+    const policyid = "9512832deafee2f8dfa5b8791bd371999a118a5713db059ad16cb72a";
 
     const randomSelect = function (n, array) {
       const shuffled = array.sort(function () {
@@ -334,7 +334,7 @@ export async function sendingCards(
     const serverAddress = CardanoWasm.Address.from_bech32(serverAddressBech32); // Server direction
     const clientAddress = CardanoWasm.Address.from_bech32(address); // Client direction
     const tokensbyId = await getTokensbyPolicyId(serverAddressBech32, policyid);
-    const selectedTokens = randomSelect(7, tokensbyId);
+    const selectedTokens = randomSelect(7 * buyOption, tokensbyId);
     //console.log(selectedTokens);
 
     const utxosServer = await getUtxos(serverAddressBech32);
@@ -351,8 +351,15 @@ export async function sendingCards(
     );
 
     const valueTokens = amountToValue(selectedTokens);
+    let minAda = CardanoWasm.Value.new(
+      CardanoWasm.min_ada_required(
+        valueTokens,
+        false,
+        CardanoWasm.BigNum.from_str(protocolParameters.coinsPerUtxoWord)
+      )
+    );
 
-    let minAda = CardanoWasm.Value.new(CardanoWasm.BigNum.from_str("2000000"));
+    //let minAda = CardanoWasm.Value.new(CardanoWasm.BigNum.from_str("2000000"));
 
     const outPutClient_ = CardanoWasm.TransactionOutput.new(
       clientAddress,
@@ -400,36 +407,6 @@ export async function sendingCards(
   }
 }
 
-const ValuetoAmount = function (value) {
-  const amount = [];
-  const coin = value.coin().to_str();
-  amount.push({ unity: "lovelace", quantity: coin });
-  if (value.multiasset()) {
-    const multiAssets = value.multiasset().keys();
-    //console.log(multiAssets.len());
-    for (let j = 0; j < multiAssets.len(); j++) {
-      const policy = multiAssets.get(j);
-      const policyAssets = value.multiasset().get(policy);
-      const assetNames = policyAssets.keys();
-      for (let k = 0; k < assetNames.len(); k++) {
-        //console.log(assetNames.len());
-        const assetPolicy = Buffer.from(policy.to_bytes()).toString("hex"); // hex encoded policy
-        const assetName = Buffer(
-          Buffer.from(assetNames.get(k).name(), "hex").toString(),
-          "hex"
-        ).toString(); // utf8 encoded asset name
-        const quantity = policyAssets.get(assetNames.get(k)).to_str(); // asset's quantity
-        const value_ = {
-          unity: `${assetPolicy}${assetName}`,
-          quantity: quantity,
-        };
-        amount.push(value_);
-      }
-    }
-  }
-  return amount;
-};
-
 export async function ForgeWeapon(
   clientAddress,
   balance,
@@ -437,6 +414,10 @@ export async function ForgeWeapon(
   assetsWithMetada,
   tokensToBurn
 ) {
+  /* Like we can not burn NFTs, we send them back to an Address, as every transaction must carry ADA, in order to do not lose Ada we do the following: 
+  The ForgeWeapon Transaction has Two Outputs: 
+  1) The Output client with the Change of their inputs- min ada required for sending the burning tokens - Fee + Minted Assets,
+  2) Output to the Adress where the tokens used to Forge are sent wich have the change of the outputs - the min Ada required for the user to send Us the tokens he is burning */
   const protocolParameters = await initTx();
   const addressBench32_1 = process.env.ADDRESS; // Addres used in the policy
 
@@ -542,19 +523,25 @@ export async function ForgeWeapon(
         Buffer.from(element, "hex")
       );
     });
-    console.log(utxos_);
 
     const selection = await CoinSelection.randomImprove(utxos_, _outputs, 20);
 
-    //Start here when sending ADA back
+    //Sends the user back the ADA he sends with the tokens beeing burned
 
-    /*  const selectedUtxosBurningAddress = await CoinSelection.randomImprove(                   
+    const OutputToUserBack = CardanoWasm.TransactionOutput.new(
+      address,
+      checkValueBurning
+    );
+
+    const OutputsToUserBack = CardanoWasm.TransactionOutputs.new();
+    OutputsToUserBack.add(OutputToUserBack);
+    console.log(OutputsToUserBack.get(0).amount().coin().to_str());
+
+    const selectedUtxosBurningAddress = await CoinSelection.randomImprove(
       utxosBurningAddress,
-      CardanoWasm.TransactionOutputs.new().add(
-        CardanoWasm.TransactionOutput.new(address, checkValueBurning),
-        20
-      )
-    ); */
+      OutputsToUserBack,
+      20
+    );
 
     const nativeScripts = CardanoWasm.NativeScripts.new();
     nativeScripts.add(policy.script);
@@ -576,7 +563,10 @@ export async function ForgeWeapon(
     );
 
     mintedValue.set_multiasset(multiAsset);
-    value = value.checked_add(mintedValue);
+    value = value.checked_add(mintedValue); //Add minted Assets
+    let valueChangetoBurningAddress = CardanoWasm.Value.new(
+      CardanoWasm.BigNum.from_str("0")
+    );
 
     const mint = CardanoWasm.Mint.new();
 
@@ -598,6 +588,7 @@ export async function ForgeWeapon(
     );
 
     const inputs = CardanoWasm.TransactionInputs.new();
+
     selection.input.forEach((utxo) => {
       inputs.add(
         CardanoWasm.TransactionInput.new(
@@ -605,19 +596,35 @@ export async function ForgeWeapon(
           utxo.input().index()
         )
       );
-      value = value.checked_add(utxo.output().amount());
+      value = value.checked_add(utxo.output().amount()); //Adds all inputs
     });
-    value = value.checked_sub(burningValue.checked_add(checkValueBurning));
-    const rawOutputs = CardanoWasm.TransactionOutputs.new();
-    rawOutputs.add(CardanoWasm.TransactionOutput.new(address, value));
-    {
-      rawOutputs.add(
-        CardanoWasm.TransactionOutput.new(
-          burningAddress,
-          burningValue.checked_add(checkValueBurning)
+
+    selectedUtxosBurningAddress.input.forEach((utxo) => {
+      inputs.add(
+        CardanoWasm.TransactionInput.new(
+          utxo.input().transaction_id(),
+          utxo.input().index()
         )
       );
-    }
+      valueChangetoBurningAddress = valueChangetoBurningAddress.checked_add(
+        utxo.output().amount()
+      );
+    });
+    value = value.checked_sub(burningValue);
+    // quits burning Tokens
+    valueChangetoBurningAddress =
+      valueChangetoBurningAddress.checked_sub(checkValueMinting);
+    const rawOutputs = CardanoWasm.TransactionOutputs.new();
+
+    rawOutputs.add(CardanoWasm.TransactionOutput.new(address, value));
+    //ChangeBurningAdresss + BurningTokens
+    rawOutputs.add(
+      CardanoWasm.TransactionOutput.new(
+        burningAddress,
+        valueChangetoBurningAddress.checked_add(burningValue)
+      )
+    );
+
     const fee = CardanoWasm.BigNum.from_str("0");
 
     const rawTxBody = CardanoWasm.TransactionBody.new(
@@ -675,11 +682,13 @@ export async function ForgeWeapon(
 
     value = value.checked_sub(CardanoWasm.Value.new(minFee));
     const outputs = CardanoWasm.TransactionOutputs.new();
+    // Minting+ Change - Fee
     outputs.add(CardanoWasm.TransactionOutput.new(address, value));
+    //ChangeBurningAdresss + BurningTokens
     outputs.add(
       CardanoWasm.TransactionOutput.new(
         burningAddress,
-        burningValue.checked_add(checkValueBurning)
+        valueChangetoBurningAddress.checked_add(burningValue)
       )
     );
 
@@ -733,71 +742,38 @@ export async function createLockingPolicyScript(address, protocolParameters) {
   ).toString("hex");
   return { id: policyId, script: finalScript, ttl };
 }
-/* 
-const selectedTokens = [
-  {
-    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3139",
-    quantity: "1",
-  },
-  {
-    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3138",
-    quantity: "1",
-  },
-  {
-    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d32",
-    quantity: "1",
-  },
-  {
-    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3132",
-    quantity: "1",
-  },
-  {
-    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3131",
-    quantity: "1",
-  },
-  {
-    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d3133",
-    quantity: "1",
-  },
-  {
-    unit: "7182eab735c0d18829a5414b9d8eb35997d0d598d150e5743357a7816f616b776f6f642d35",
-    quantity: "1",
-  },
-];
 
-const clientAddress = CardanoWasm.Address.from_bech32(
-  "addr_test1qrz0vszy8g52dnc0had0h9h9utza0hdr4yyqlylaas6asg3an0wycuczcr26vyv429qu6exsq6sjwd70h5npewawn9qs6gxrw3"
-);
-const utxosServer = await getUtxos(process.env.ADDRESS);
+export function toHex(bytes) {
+  return Buffer.from(bytes).toString("hex");
+}
+export function fromHex(hex) {
+  return Buffer.from(hex, "hex");
+}
 
-const valueTokens = amountToValue(selectedTokens);
+export function ValuetoAmount(value) {
+  let amount = [{ unit: "lovelace", quantity: `${value.coin().to_str()}` }];
 
-let minAda = CardanoWasm.Value.new(
-  CardanoWasm.BigNum.from_str("3000000")
-).checked_add(valueTokens);
-
-const outPutClient_ = CardanoWasm.TransactionOutput.new(clientAddress, minAda);
-let outPutsClient_ = CardanoWasm.TransactionOutputs.new();
-outPutsClient_.add(outPutClient_);
-
-const protocolParameters = await initTx();
-
-CoinSelection.setProtocolParameters(
-  protocolParameters.minUtxo,
-  protocolParameters.coinsPerUtxoWord,
-  protocolParameters.linearFee.minFeeA,
-  protocolParameters.linearFee.minFeeB,
-  protocolParameters.maxTxSize
-);
-const selectionServer = await CoinSelection.randomImprove(
-  utxosServer,
-  outPutsClient_,
-  20
-); */
-
-/* const selecedutxos = async function (selectedTokens, utxos) {
-  const outputs = utxos.map((x) => ValuetoAmount(x.output().amount()));
-  console.log(outputs);
-  return utxos;
-}; */
-// console.log(a);
+  if (value.multiasset()) {
+    const multiAssets = value.multiasset().keys();
+    for (let j = 0; j < multiAssets.len(); j++) {
+      const policy = multiAssets.get(j);
+      const policyAssets = value.multiasset().get(policy);
+      const assetNames = policyAssets.keys();
+      for (let k = 0; k < assetNames.len(); k++) {
+        const assetPolicy = Buffer.from(policy.to_bytes()).toString("hex"); // hex encoded policy
+        const assetNamestr = Buffer.from(
+          assetNames.get(k).name(),
+          "hex"
+        ).toString(); // utf8 encoded asset name
+        const quantity = policyAssets.get(assetNames.get(k)).to_str(); // asset's quantity
+        //console.log(assetPolicy, , assetNamestr, quantity);
+        amount.push({
+          unit: `${assetPolicy}${toHex(assetNamestr)}`,
+          quantity: `${quantity}`,
+        });
+      }
+    }
+    //console.log(amount);
+    return amount;
+  }
+}

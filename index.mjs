@@ -75,15 +75,29 @@ app.post("/api/forge-weapon", async function (req, res) {
     const balance = req.body.balance;
     const utxos = req.body.utxos;
     const tokensToBurn = req.body.tokensToBurn;
+    const nFTtoForge = req.body.nFTtoForge;
 
     const response = await ForgeWeapon(
       addressBench32_1,
       balance,
       utxos,
       {
-        assets: [{ name: "TestWeapon", quantity: "1" }],
-        metadatas: {},
+        assets: [{ name: nFTtoForge.value, quantity: "1" }],
+        metadatas: {
+          [nFTtoForge.value]: {
+            description: "weapon",
+            files: [
+              {
+                mediaType: "img.png",
+                src: `ipfs://${nFTtoForge.img}`,
+              },
+            ],
+            image: `ipfs://${nFTtoForge.img}`,
+            mediaType: "img.png",
+          },
+        },
       },
+
       tokensToBurn
     );
     res.send(response);
