@@ -1,35 +1,54 @@
 export const materialsURL = [
-  [
+  /*  [
     "charcoal",
-    "QmS8x5XZpU2s7ovoxvgEQddD69NDhTpJeNiGwyxxQdp7cR",
+    "QmRxLPC7YwHbWp5cMxRoU8JxvfHdwc9Lrv5o5tRu6yRgJx",
     "material-raw",
   ],
   [
     "gemstones",
-    "QmWd6r3QFnWWShE6ze9GmNMe56D9dRe6qefcMWL6ztheMz",
+    "QmZt9jpHEawzzJZkQ5gWntL3Fn74JPJLm85Ed7rEYuoM9H",
     "material-raw",
   ],
   [
     "goldcoin",
-    "QmS8x5XZpU2s7ovoxvgEQddD69NDhTpJeNiGwyxxQdp7cR",
+    "QmQrdCZsCQL1mBEEv9ZV9fANCzdicvwTL7TxxVG81mbrMK",
     "material-raw",
-  ],
-  ["ironore", "QmYNSaHDX3t29a2Vt3siSUzbTjzwNxNREdJ8asFBM5WMtd", "material-raw"],
+  ], */
   [
-    "ironsands",
-    "QmRd2ZytvV3NfXnwEUvMnLoYCikSPZt2BKeei1jtqFCNnB",
+    "ironore",
+    "QmTdUD1TUpkjJQBj6DJmd9XaAJZy76z63rvteanrdhfFXY ",
     "material-raw",
   ],
-  ["leather", "QmTykrEw3Lm9YyVAJqkQSwaTpgjwShhvxuhomZ34sVPxw5", "material-raw"],
-  ["oakwood", "QmYDeFYotnrcsPKU5EmJf3Vr8YwmbYX9DVBopscGroaF3R", "material-raw"],
+  /* [
+    "ironsands",
+    "QmPhz8SS2kbWjUzw5imsZqVyxvd4MfoKctTHgsXcJ34u8Z",
+    "material-raw",
+  ],
+  ["leather", "QmR8zcgemdKS96adBvkpzKNCfhZ9CfsyDyut7nuvUTo3WS", "material-raw"],
+  ["oakwood", "Qmc6wzJAJZXneS1V5eUuir4wfFAbFxTJUZZBeuxZQ92jcW", "material-raw"],
   [
     "silvercoin",
-    "QmXJAD8YhV21brYax4R2xBQDD2bXQXvNw6fAFa9uenXYD3",
+    "QmaJJg732YyE6Eqq1vDZAqueKA2eEhpVFTFcNtLGEnni1Y",
     "material-raw",
   ],
+  [
+    "wootzsteal",
+    "QmaJJg732YyE6Eqq1vDZAqueKA2eEhpVFTFcNtLGEnni1Y",
+    "material-ingot",
+  ], */
+  [
+    "tamahaganesteal",
+    "QmaJJg732YyE6Eqq1vDZAqueKA2eEhpVFTFcNtLGEnni1Y",
+    "material-ingot",
+  ],
+  /* [
+    "bloomiron",
+    "QmaJJg732YyE6Eqq1vDZAqueKA2eEhpVFTFcNtLGEnni1Y",
+    "material-ingot",
+  ], */
 ];
-
-/* export const weaponsURL = {
+/* 
+export const weaponsURL = {
   anvil, "QmZK3Vo812NC9GaRtzFdH6wRxyryzkYTsruRo9xWC277EH",
   axe, "QmWZGrn3HkfBJzZHi5qiJ4wdFPmMjWKw4YegBiRRoqhTxU",
   crusaidersword, "QmfVHgRhmQRsgebaxPU9kNUmQR9aDzHRqtpTuqmeE9McgM",
