@@ -7,7 +7,7 @@ import {
 import dotenv from "dotenv";
 dotenv.config();
 const walletKey = process.env.WALLET_KEY;
-
+//console.log(walletKey);
 function harden(num) {
   return 0x80000000 + num;
 }
