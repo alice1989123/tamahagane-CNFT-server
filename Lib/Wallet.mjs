@@ -320,7 +320,7 @@ export async function sendingCards(
   };
   const check = true; //await checkTx(txHashClient, buyOption);
   if (check === true) {
-    const policyid = "9512832deafee2f8dfa5b8791bd371999a118a5713db059ad16cb72a";
+    const policyid = "e93ec6209631511713b832e5378f77b587762bc272893a7163ecc46e";
 
     const randomSelect = function (n, array) {
       const shuffled = array.sort(function () {
