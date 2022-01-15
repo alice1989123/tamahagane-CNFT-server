@@ -4,7 +4,7 @@ import {
   NetworkInfo,
   StakeCredential,
 } from "@emurgo/cardano-serialization-lib-nodejs";
-import dotenv from "dotenv";
+import * as dotenv from "dotenv";
 dotenv.config();
 const walletKey = process.env.WALLET_KEY;
 //console.log(walletKey);

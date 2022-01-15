@@ -100,4 +100,4 @@ const rawmetadataBuilder = function (description, mediaType, src) {
     mediaType: mediaType,
   };
 };
-Mint(45646952);
+Mint(47949788);

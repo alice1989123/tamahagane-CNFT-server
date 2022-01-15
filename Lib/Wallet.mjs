@@ -6,6 +6,7 @@ import CoinSelection from "./CoinSelection.mjs";
 import axios from "axios";
 import dotenv from "dotenv";
 import { Buffer } from "safe-buffer";
+import { getActiveSells } from "../Database/Activesells.mjs";
 
 dotenv.config();
 export const baseAddr = process.env.ADDRESS;
@@ -63,6 +64,41 @@ export async function getTxInfo(hash) {
   }
 }
 
+export async function MarketData(marketaddress) {
+  try {
+    const data = await getWalletBalance(marketaddress);
+    //console.log(data);
+    const sales = await getActiveSells();
+    //console.log(sales);
+
+    let filteredData = data.amount.filter((x) =>
+      sales.map((y) => y.unit).includes(x.unit)
+    );
+
+    filteredData = filteredData.filter((x) => x.quantity == 1); // We will only allow NTs!
+
+    let filteredDataPrice = [];
+
+    filteredData.forEach((x, i) => {
+      const price = sales.filter((y) => y.unit == x.unit)[0].price;
+      const address = sales.filter((y) => y.unit == x.unit)[0].address;
+      filteredDataPrice.push({
+        unit: x.unit,
+        quantity: x.quantity,
+        price: price,
+        address: address,
+      });
+    });
+
+    //console.log(filteredData);
+    console.log(filteredDataPrice);
+    return filteredDataPrice;
+  } catch (e) {
+    console.log(e);
+    return [];
+  }
+}
+
 export async function getMetadata(asset) {
   try {
     // Adds Blockfrost project_id to req header
@@ -82,8 +118,7 @@ export async function getMetadata(asset) {
     return null;
   }
 }
-
-async function blockFrostReq(URL) {
+export async function blockFrostReq(URL) {
   try {
     // Adds Blockfrost project_id to req header
     const configBuilder = {
