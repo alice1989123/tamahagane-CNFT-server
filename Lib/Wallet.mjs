@@ -91,7 +91,7 @@ export async function MarketData(marketaddress) {
     });
 
     //console.log(filteredData);
-    console.log(filteredDataPrice);
+    //console.log(filteredDataPrice);
     return filteredDataPrice;
   } catch (e) {
     console.log(e);
@@ -334,7 +334,7 @@ export async function sendingCards(
       try {
         const txInfo = await getTxInfo(txHashClient);
         const outputs = txInfo.outputs;
-        console.log(outputs);
+        //console.log(outputs);
 
         const serverOutput = outputs.filter(
           (x) => x.address === serverAddressBech32
@@ -373,7 +373,7 @@ export async function sendingCards(
     //console.log(selectedTokens);
 
     const utxosServer = await getUtxos(serverAddressBech32);
-    console.log(`this is the leght of the utxo array ${utxosServer.length}`);
+    //console.log(`this is the leght of the utxo array ${utxosServer.length}`);
 
     const protocolParameters = await initTx();
 
@@ -488,7 +488,7 @@ export async function ForgeWeapon(
 
     try {
       const CBORTx = Buffer.from(transaction.to_bytes(), "hex").toString("hex");
-      console.log(CBORTx);
+      //console.log(CBORTx);
       return CBORTx;
     } catch (e) {
       console.log(e);
@@ -570,7 +570,7 @@ export async function ForgeWeapon(
 
     const OutputsToUserBack = CardanoWasm.TransactionOutputs.new();
     OutputsToUserBack.add(OutputToUserBack);
-    console.log(OutputsToUserBack.get(0).amount().coin().to_str());
+    //console.log(OutputsToUserBack.get(0).amount().coin().to_str());
 
     const selectedUtxosBurningAddress = await CoinSelection.randomImprove(
       utxosBurningAddress,
@@ -673,9 +673,9 @@ export async function ForgeWeapon(
     let _metadata;
     if (metadata) {
       const generalMetadata = CardanoWasm.GeneralTransactionMetadata.new();
-      console.log(
+      /*  console.log(
         Buffer.from(generalMetadata.to_bytes(), "hex").toString("hex")
-      );
+      ); */
 
       generalMetadata.insert(
         CardanoWasm.BigNum.from_str("721"),
