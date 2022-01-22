@@ -5,33 +5,32 @@ import {
   amountToValue,
   makeTxBuilder,
   submitTx,
-  getWalletData,
-  fromHex,
-  toHex,
 } from "./Lib/Wallet.mjs";
 import dotenv from "dotenv";
 import * as CardanoWasm from "@emurgo/cardano-serialization-lib-nodejs";
 import { initTx } from "./Lib/Wallet.mjs";
-import { prvKey } from "./Wallet/keys.mjs";
-import CoinSelection from "./Lib/CoinSelection.mjs";
+import { getKeyAddress } from "./Wallet/keys.mjs";
+import { __wasm } from "@emurgo/cardano-serialization-lib-nodejs";
 
 dotenv.config();
 
-const addressBench32_1 = process.env.ADDRESS;
-console.log(addressBench32_1);
-const addressBench32_2 =
-  "addr_test1wp9cnq967kcf7dtn7fhpqr0cz0wjffse67qc3ww4v3c728c4qjr6j"; //always succeds script
+export async function sendAllTokens(sender, reciver) {
+  //we must provide sender prvKeyBech32 , and reciver addressBech32
+  console.log(getKeyAddress(sender));
 
-async function sendTokens(sender, reciver) {
-  const shelleySenderAddress = CardanoWasm.Address.from_bech32(sender);
+  const senderBech32 = getKeyAddress(sender).address;
+
+  const prvKey = getKeyAddress(sender).prvKey;
+  const shelleySenderAddress = CardanoWasm.Address.from_bech32(
+    getKeyAddress(sender).address
+  );
   const shelleyReciverAddress = CardanoWasm.Address.from_bech32(reciver);
-  const walletBalance = await getWalletBalance(sender);
-  console.log(walletBalance);
+  const walletBalance = await getWalletBalance(senderBech32);
 
   const totalMultiAssets = walletBalance.amount.filter(
     (x) => x.unit !== "lovelace"
   );
-  console.log(totalMultiAssets);
+  //console.log(totalMultiAssets);
 
   const value = await amountToValue(totalMultiAssets);
 
@@ -58,12 +57,12 @@ async function sendTokens(sender, reciver) {
 
   const txBuilder = await makeTxBuilder();
 
-  const utxos = await getUtxos(sender);
+  const utxos = await getUtxos(senderBech32);
 
   const selection = utxos;
   selection.forEach((input) => {
     txBuilder.add_input(
-      CardanoWasm.Address.from_bech32(addressBench32_1),
+      CardanoWasm.Address.from_bech32(reciver),
       input.input(),
       input.output().amount()
     );
@@ -92,5 +91,7 @@ async function sendTokens(sender, reciver) {
 
   await submitTx(transaction);
 }
-
-sendTokens(addressBench32_1, addressBench32_2);
+/* sendAllTokens(
+  process.env.WALLET_KEY,
+  "addr_test1qzuyknghkculhjwup9yxse6rjxe33nyqenf2g6lvrs3g8anl8mc4fcux9z30v47fp4zct2z70uyk5xsskma2whe2g93snuxle3"
+); */

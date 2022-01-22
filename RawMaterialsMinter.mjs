@@ -1,6 +1,11 @@
 // import { materialsURL } from "./Constants/assetsURLS.mjs";
+
+// THE MINT HAPPENS IN THE SECONDARY ADDRESS AND SENDS BACK TO SERVER ADDRESS BATCHES OR NEWNLY MINTED NFTS
+import * as dotenv from "dotenv";
 import { MintTx } from "./mintRawMaterials.mjs";
 import { initTx } from "./Lib/Wallet.mjs";
+import { sendAllTokens } from "./sendingAllTokensToAddress.mjs";
+dotenv.config();
 
 const materialsURL = [
   [
@@ -35,7 +40,7 @@ const materialsURL = [
     "QmaJJg732YyE6Eqq1vDZAqueKA2eEhpVFTFcNtLGEnni1Y",
     "material-raw",
   ],
-  [
+  /*   [
     "wootzsteal",
     "QmeX9fdNmwByvGP7CGMk4j7Ec42z6HLqWTU6a1EHFewvoF",
     "material-ingot",
@@ -49,7 +54,7 @@ const materialsURL = [
     "bloomiron",
     "Qmb2ivgVpr71cMqPAqca8ZihEczcKt2Zk2EqYpznFvMqNJ",
     "material-ingot",
-  ],
+  ], */
 ];
 
 function sleep(ms) {
@@ -57,11 +62,11 @@ function sleep(ms) {
 }
 const ProtocolParameters = await initTx();
 const ttl = ProtocolParameters.slot + 20000;
-const numberofAssets = 25;
+const numberofAssets = 50;
 const assetsGenerator = function (baseName, rawmetadata) {
   let assets = [];
   let metadatas = {};
-  for (let i = 0; i < numberofAssets; i++) {
+  for (let i = 26; i < numberofAssets + 1; i++) {
     const name_ = `${baseName}${i}`;
     const asset = { name: name_, quantity: "1" };
     metadatas[name_] = rawmetadata;
@@ -83,8 +88,10 @@ async function Mint(ttl) {
     );
 
     MintTx(assets, ttl);
-    await sleep(120000);
+    await sleep(180000);
   }
+  await sendAllTokens(process.env.WALLET_KEY_SECONDARY, process.env.ADDRESS);
+  await sleep(180000);
 }
 
 const rawmetadataBuilder = function (description, mediaType, src) {
@@ -100,4 +107,4 @@ const rawmetadataBuilder = function (description, mediaType, src) {
     mediaType: mediaType,
   };
 };
-Mint(47949788);
+Mint(48440322 + 20000000);

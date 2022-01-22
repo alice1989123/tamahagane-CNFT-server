@@ -4,8 +4,6 @@ import { response } from "express";
 
 dotenv.config();
 
-dotenv.config();
-
 const user = process.env.DB_USER;
 const pw = process.env.DB_KEY;
 

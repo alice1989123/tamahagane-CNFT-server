@@ -3,11 +3,15 @@ import { BlockFrostAPI } from "@blockfrost/blockfrost-js";
 import { idTestnet } from "./Wallet/blockfrost.mjs";
 import axios from "axios";
 import CoinSelection from "./Lib/CoinSelection.mjs";
-import { prvKey } from "./Wallet/keys.mjs";
+import { getKeyAddress } from "./Wallet/keys.mjs";
 import dotenv from "dotenv";
 import { metadataBuilder } from "./Lib/Wallet.mjs";
 dotenv.config();
-const baseAddr = process.env.ADDRESS;
+
+const addressBench32_1 = process.env.ADDRESS_SECONDARY;
+const prvKey = getKeyAddress(process.env.WALLET_KEY_SECONDARY).prvKey;
+
+const shelleyChangeAddress = CardanoWasm.Address.from_bech32(addressBench32_1);
 
 const request = async function (url) {
   try {
@@ -55,13 +59,6 @@ const initTx = async () => {
     console.log(e);
   }
 };
-
-const addressBench32_1 = baseAddr;
-
-const addressBench32_2 =
-  "addr_test1qp6kuchljenmrpeqndh7rdthqc2frnm0jw5pu8u3ws0zuwkvhpj2uecg0a5mhkdtwnm30qw38tjq42uxu80rpjn7yytsmffw4e";
-
-const shelleyChangeAddress = CardanoWasm.Address.from_bech32(addressBench32_1);
 
 async function blockFrostReq(addrs) {
   try {

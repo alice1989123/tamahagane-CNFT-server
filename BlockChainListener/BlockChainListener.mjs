@@ -119,7 +119,6 @@ const registerTransactionstoPay = async function (address) {
 
   const hashes = await payDoubs();
 };
-await registerTransactionstoPay(serverAddress);
 
 while (true) {
   await sleep(60000);
