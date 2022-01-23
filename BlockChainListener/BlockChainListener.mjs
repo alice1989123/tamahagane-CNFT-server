@@ -37,8 +37,6 @@ const registerpassedTx = async function (address) {
   );
 };
 
-//registerpassedTx(serverAddress);
-
 const registerTransactionstoPay = async function (address) {
   const TransactionsInBlockChain = await BlockFrost.addressesTransactions(
     address,
@@ -120,11 +118,6 @@ const registerTransactionstoPay = async function (address) {
   const hashes = await payDoubs();
 };
 
-while (true) {
-  await sleep(60000);
-  await registerTransactionstoPay(serverAddress);
-}
-
 function classyfyTx(Doubt) {
   const senderAddress = Doubt[0];
   const adarecived = Doubt[1];
@@ -148,3 +141,11 @@ function classyfyTx(Doubt) {
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+while (true) {
+  await sleep(60000);
+  await registerTransactionstoPay(serverAddress);
+}
+
+/* registerpassedTx(serverAddress);
+ */

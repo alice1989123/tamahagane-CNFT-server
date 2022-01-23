@@ -1,5 +1,5 @@
 import * as CardanoWasm from "@emurgo/cardano-serialization-lib-nodejs";
-import { prvKey } from "../Wallet/keys.mjs";
+import { prvKey, getKeyAddress } from "../Wallet/keys.mjs";
 import { BlockFrostAPI } from "@blockfrost/blockfrost-js";
 import { idTestnet } from "../Wallet/blockfrost.mjs";
 import CoinSelection from "./CoinSelection.mjs";
@@ -449,12 +449,9 @@ export async function ForgeWeapon(
   assetsWithMetada,
   tokensToBurn
 ) {
-  /* Like we can not burn NFTs, we send them back to an Address, as every transaction must carry ADA, in order to do not lose Ada we do the following: 
-  The ForgeWeapon Transaction has Two Outputs: 
-  1) The Output client with the Change of their inputs- min ada required for sending the burning tokens - Fee + Minted Assets,
-  2) Output to the Adress where the tokens used to Forge are sent wich have the change of the outputs - the min Ada required for the user to send Us the tokens he is burning */
   const protocolParameters = await initTx();
-  const addressBench32_1 = process.env.ADDRESS; // Addres used in the policy
+  const addressBench32_1 = process.env.ADDRESS_SECONDARY; // Addres used in the policy the same Address used for minting
+  const signingPrvKey = getKeyAddress(process.env.WALLET_KEY_SECONDARY).prvKey;
 
   const policy = await createLockingPolicyScript(
     addressBench32_1,
@@ -477,7 +474,7 @@ export async function ForgeWeapon(
     const witnesses = tx.witness_set();
 
     const vkeysWitnesses = CardanoWasm.Vkeywitnesses.new();
-    const vkeyWitness = CardanoWasm.make_vkey_witness(txHash, prvKey);
+    const vkeyWitness = CardanoWasm.make_vkey_witness(txHash, signingPrvKey);
     vkeysWitnesses.add(vkeyWitness);
     witnesses.set_vkeys(vkeysWitnesses);
     const transaction = CardanoWasm.Transaction.new(
@@ -507,7 +504,7 @@ export async function ForgeWeapon(
     const address = CardanoWasm.Address.from_bech32(clientAddress); // clientAddress
     const burningAddress =
       CardanoWasm.Address.from_bech32(burningAddressBech32);
-    const utxosBurningAddress = await getUtxos(burningAddressBech32);
+    /* const utxosBurningAddress = await getUtxos(burningAddressBech32); */
 
     const checkValueMinting = amountToValue(
       assets.map((asset) => ({
@@ -532,6 +529,8 @@ export async function ForgeWeapon(
       )
     );
 
+    const outputServer = burningValue.checked_add(checkValueBurning);
+
     const _outputs = CardanoWasm.TransactionOutputs.new();
     _outputs.add(
       CardanoWasm.TransactionOutput.new(
@@ -540,11 +539,10 @@ export async function ForgeWeapon(
       )
     );
     _outputs.add(
-      CardanoWasm.TransactionOutput.new(
-        burningAddress,
-        burningValue.checked_add(checkValueBurning)
-      )
+      CardanoWasm.TransactionOutput.new(burningAddress, outputServer)
     );
+
+    console.log(Buffer.from(_outputs.to_bytes(), "hex").toString("hex"));
 
     CoinSelection.setProtocolParameters(
       protocolParameters.minUtxo,
@@ -563,20 +561,20 @@ export async function ForgeWeapon(
 
     //Sends the user back the ADA he sends with the tokens beeing burned
 
-    const OutputToUserBack = CardanoWasm.TransactionOutput.new(
+    /* const OutputToUserBack = CardanoWasm.TransactionOutput.new(
       address,
       checkValueBurning
-    );
+    ); */
 
-    const OutputsToUserBack = CardanoWasm.TransactionOutputs.new();
-    OutputsToUserBack.add(OutputToUserBack);
+    /* const OutputsToUserBack = CardanoWasm.TransactionOutputs.new();
+    OutputsToUserBack.add(OutputToUserBack); */
     //console.log(OutputsToUserBack.get(0).amount().coin().to_str());
 
-    const selectedUtxosBurningAddress = await CoinSelection.randomImprove(
+    /*    const selectedUtxosBurningAddress = await CoinSelection.randomImprove(
       utxosBurningAddress,
       OutputsToUserBack,
       20
-    );
+    ); */
 
     const nativeScripts = CardanoWasm.NativeScripts.new();
     nativeScripts.add(policy.script);
@@ -599,9 +597,6 @@ export async function ForgeWeapon(
 
     mintedValue.set_multiasset(multiAsset);
     value = value.checked_add(mintedValue); //Add minted Assets
-    let valueChangetoBurningAddress = CardanoWasm.Value.new(
-      CardanoWasm.BigNum.from_str("0")
-    );
 
     const mint = CardanoWasm.Mint.new();
 
@@ -634,21 +629,8 @@ export async function ForgeWeapon(
       value = value.checked_add(utxo.output().amount()); //Adds all inputs
     });
 
-    selectedUtxosBurningAddress.input.forEach((utxo) => {
-      inputs.add(
-        CardanoWasm.TransactionInput.new(
-          utxo.input().transaction_id(),
-          utxo.input().index()
-        )
-      );
-      valueChangetoBurningAddress = valueChangetoBurningAddress.checked_add(
-        utxo.output().amount()
-      );
-    });
-    value = value.checked_sub(burningValue);
-    // quits burning Tokens
-    valueChangetoBurningAddress =
-      valueChangetoBurningAddress.checked_sub(checkValueMinting);
+    value = value.checked_sub(outputServer); // quits burning Tokens + min ada required for sending the burning tokens
+
     const rawOutputs = CardanoWasm.TransactionOutputs.new();
 
     rawOutputs.add(CardanoWasm.TransactionOutput.new(address, value));
@@ -656,7 +638,7 @@ export async function ForgeWeapon(
     rawOutputs.add(
       CardanoWasm.TransactionOutput.new(
         burningAddress,
-        valueChangetoBurningAddress.checked_add(burningValue)
+        checkValueBurning.checked_add(burningValue)
       )
     );
 
@@ -716,16 +698,15 @@ export async function ForgeWeapon(
     let minFee = CardanoWasm.min_fee(rawTx, linearFee);
 
     value = value.checked_sub(CardanoWasm.Value.new(minFee));
+
     const outputs = CardanoWasm.TransactionOutputs.new();
     // Minting+ Change - Fee
     outputs.add(CardanoWasm.TransactionOutput.new(address, value));
-    //ChangeBurningAdresss + BurningTokens
     outputs.add(
-      CardanoWasm.TransactionOutput.new(
-        burningAddress,
-        valueChangetoBurningAddress.checked_add(burningValue)
-      )
+      CardanoWasm.TransactionOutput.new(burningAddress, outputServer)
     );
+    console.log(checkValueBurning.coin().to_str());
+    console.log(outputs.len());
 
     const finalTxBody = CardanoWasm.TransactionBody.new(
       inputs,
@@ -747,6 +728,7 @@ export async function ForgeWeapon(
 
     const size = transaction.to_bytes().length * 2;
     if (size > protocolParameters.maxTxSize) throw ERROR.txTooBig;
+    console.log(Buffer.from(transaction.to_bytes(), "hex").toString("hex"));
 
     return transaction;
   }
