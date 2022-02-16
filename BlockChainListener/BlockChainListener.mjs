@@ -1,6 +1,7 @@
 import { blockFrostReq, BlockFrost } from "./blockfrost.mjs";
 import dotenv from "dotenv";
 import {
+  getLastRegisteredTx,
   registerTransaction,
   getRegisteredTx,
 } from "../Database/AddressChecker.mjs";
@@ -19,9 +20,9 @@ const getTransactionsUTXOs = async function (hash) {
   return transaction;
 };
 
-const registerpassedTx = async function (address) {
+const registerpassedTx = async function () {
   const TransactionsInBlockChain = await BlockFrost.addressesTransactions(
-    address,
+    serverAddress,
     { order: "desc" }
   );
 
@@ -37,9 +38,9 @@ const registerpassedTx = async function (address) {
   );
 };
 
-const registerTransactionstoPay = async function (address) {
+export const registerTransactionstoPay = async function () {
   const TransactionsInBlockChain = await BlockFrost.addressesTransactions(
-    address,
+    serverAddress,
     { order: "desc" }
   );
   //console.log(TransactionsInBlockChain);
@@ -67,8 +68,9 @@ const registerTransactionstoPay = async function (address) {
         const amountPayedtoServer = outpusToServer
           .map((x) => parseInt(x.amount[0].quantity))
           .reduce((x, y) => x + y, 0);
-
-        currentDoubts.push([senderAddress, amountPayedtoServer, hash]);
+        if (senderAddress !== serverAddress) {
+          currentDoubts.push([senderAddress, amountPayedtoServer, hash]);
+        }
       }
     } catch (e) {
       console.log(e);
@@ -142,10 +144,14 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-while (true) {
-  await sleep(60000);
-  await registerTransactionstoPay(serverAddress);
+export async function getLastTxConfirmation() {
+  const lastRegister = await getLastRegisteredTx("PayedTxs");
+  const lastHash = lastRegister[0].hash;
+  console.log(lastHash);
+  const serverTxs = await BlockFrost.addressesTransactions(serverAddress, {
+    order: "desc",
+  });
+  const isTxConfirmed = serverTxs.map((x) => x.tx_hash).includes(lastHash);
+  //console.log(isTxConfirmed);
+  return isTxConfirmed;
 }
-
-/* registerpassedTx(serverAddress);
- */

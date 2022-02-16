@@ -7,6 +7,8 @@ import axios from "axios";
 import dotenv from "dotenv";
 import { Buffer } from "safe-buffer";
 import { getActiveSells } from "../Database/Activesells.mjs";
+import { registerNFT } from "../Database/NFTsRegistry.mjs";
+import { policysId } from "../Constants/policyId.mjs";
 
 dotenv.config();
 export const baseAddr = process.env.ADDRESS;
@@ -66,8 +68,9 @@ export async function getTxInfo(hash) {
 
 export async function MarketData(marketaddress) {
   try {
+    //console.log(marketaddress);
     const data = await getWalletBalance(marketaddress);
-    //console.log(data);
+    console.log(data);
     const sales = await getActiveSells();
     //console.log(sales);
 
@@ -76,6 +79,11 @@ export async function MarketData(marketaddress) {
     );
 
     filteredData = filteredData.filter((x) => x.quantity == 1); // We will only allow NTs!
+    filteredData = filteredData.filter(
+      (
+        x // Only allow NFTs of the Tamahagane CNFT Game
+      ) => policysId.includes(x.unit.slice(0, 56))
+    );
 
     let filteredDataPrice = [];
 
@@ -111,6 +119,7 @@ export async function getMetadata(asset) {
       `https://cardano-testnet.blockfrost.io/api/v0/assets/${asset}`,
       config
     );
+    //console.log(response.data);
 
     return response.data;
   } catch (error) {
@@ -458,7 +467,9 @@ export async function ForgeWeapon(
     protocolParameters
   );
 
-  const metadata = { [policy.id]: assetsWithMetada.metadatas };
+  let metadata = assetsWithMetada.metadatas;
+
+  metadata = { [policy.id]: assetsWithMetada.metadatas };
   const assets = assetsWithMetada.assets;
 
   try {
@@ -520,6 +531,7 @@ export async function ForgeWeapon(
     );
 
     let value = CardanoWasm.Value.new(CardanoWasm.BigNum.from_str("0"));
+
     const burningValue = amountToValue(tokensToBurn);
     const checkValueBurning = CardanoWasm.Value.new(
       CardanoWasm.min_ada_required(
@@ -542,7 +554,7 @@ export async function ForgeWeapon(
       CardanoWasm.TransactionOutput.new(burningAddress, outputServer)
     );
 
-    console.log(Buffer.from(_outputs.to_bytes(), "hex").toString("hex"));
+    //console.log(Buffer.from(_outputs.to_bytes(), "hex").toString("hex"));
 
     CoinSelection.setProtocolParameters(
       protocolParameters.minUtxo,
@@ -556,6 +568,10 @@ export async function ForgeWeapon(
         Buffer.from(element, "hex")
       );
     });
+    console.log(
+      [0, 1].map((i) => ValuetoAmount(_outputs.get(i).amount())),
+      _outputs.get(0).amount().coin().to_str()
+    );
 
     const selection = await CoinSelection.randomImprove(utxos_, _outputs, 20);
 
@@ -705,8 +721,8 @@ export async function ForgeWeapon(
     outputs.add(
       CardanoWasm.TransactionOutput.new(burningAddress, outputServer)
     );
-    console.log(checkValueBurning.coin().to_str());
-    console.log(outputs.len());
+    //console.log(checkValueBurning.coin().to_str());
+    //console.log(outputs.len());
 
     const finalTxBody = CardanoWasm.TransactionBody.new(
       inputs,
@@ -728,7 +744,7 @@ export async function ForgeWeapon(
 
     const size = transaction.to_bytes().length * 2;
     if (size > protocolParameters.maxTxSize) throw ERROR.txTooBig;
-    console.log(Buffer.from(transaction.to_bytes(), "hex").toString("hex"));
+    //console.log(Buffer.from(transaction.to_bytes(), "hex").toString("hex"));
 
     return transaction;
   }
@@ -749,7 +765,7 @@ export async function createLockingPolicyScript(address, protocolParameters) {
     CardanoWasm.TimelockExpiry.new(ttl)
   );
   nativeScripts.add(nativeScript);
-  nativeScripts.add(lockScript);
+  //nativeScripts.add(lockScript); We decided to remove time-policy, since this way it would be easier to only allow NFTs with one simple policyId for all NFTs in all the game
   const finalScript = CardanoWasm.NativeScript.new_script_all(
     CardanoWasm.ScriptAll.new(nativeScripts)
   );
@@ -792,5 +808,100 @@ export function ValuetoAmount(value) {
     }
     //console.log(amount);
     return amount;
+  }
+}
+
+export async function sendAda(address, lovelaces) {
+  const serverAddress = process.env.ADDRESS;
+  const protocolParameters = await initTx();
+
+  const reciverAddress = CardanoWasm.Address.from_bech32(address);
+
+  const utxos = await getUtxos(serverAddress);
+  const value = CardanoWasm.Value.new(
+    CardanoWasm.BigNum.from_str(`${lovelaces}`)
+  );
+  const outPut = CardanoWasm.TransactionOutput.new(reciverAddress, value);
+  const outputs = CardanoWasm.TransactionOutputs.new();
+  outputs.add(outPut);
+
+  CoinSelection.setProtocolParameters(
+    protocolParameters.minUtxo,
+    protocolParameters.linearFee.minFeeA,
+    protocolParameters.linearFee.minFeeB,
+    protocolParameters.maxTxSize
+  );
+  const inputs = await CoinSelection.randomImprove(utxos, outputs);
+
+  let configBuilder = CardanoWasm.TransactionBuilderConfigBuilder.new()
+    .fee_algo(
+      CardanoWasm.LinearFee.new(
+        CardanoWasm.BigNum.from_str(protocolParameters.linearFee.minFeeA),
+
+        CardanoWasm.BigNum.from_str(protocolParameters.linearFee.minFeeB)
+      )
+    )
+    .pool_deposit(CardanoWasm.BigNum.from_str(protocolParameters.poolDeposit))
+    .key_deposit(CardanoWasm.BigNum.from_str(protocolParameters.keyDeposit))
+    .max_tx_size(protocolParameters.maxTxSize)
+    .max_value_size(protocolParameters.maxValSize)
+    .coins_per_utxo_word(
+      CardanoWasm.BigNum.from_str(protocolParameters.coinsPerUtxoWord)
+    );
+  console.log(configBuilder.build());
+
+  const txBuilder = CardanoWasm.TransactionBuilder.new(configBuilder.build());
+
+  inputs.input.forEach((utxo) => {
+    //console.log(utxo);
+    const input = utxo.input();
+    //console.log(input.address(), input, input.value());
+    //console.log(txBuilder);
+    txBuilder.add_input(
+      CardanoWasm.Address.from_bech32(serverAddress),
+      input,
+      utxo.output().amount()
+    );
+  });
+
+  txBuilder.add_output(outPut);
+
+  txBuilder.add_change_if_needed(
+    CardanoWasm.Address.from_bech32(serverAddress)
+  );
+
+  const txBody = txBuilder.build();
+
+  const tx = CardanoWasm.Transaction.new(
+    txBody,
+    CardanoWasm.TransactionWitnessSet.new()
+  );
+
+  try {
+    const txHash = CardanoWasm.hash_transaction(tx.body());
+    const witnesses = tx.witness_set();
+
+    const vkeysWitnesses = CardanoWasm.Vkeywitnesses.new();
+    const vkeyWitness = CardanoWasm.make_vkey_witness(txHash, prvKey);
+    vkeysWitnesses.add(vkeyWitness);
+    witnesses.set_vkeys(vkeysWitnesses);
+
+    const transaction = CardanoWasm.Transaction.new(
+      tx.body(),
+      witnesses,
+      tx.auxiliary_data() // transaction metadata
+    );
+
+    try {
+      const CBORTx = Buffer.from(transaction.to_bytes(), "hex").toString("hex");
+      const submitionHash = await BlockFrost.txSubmit(CBORTx);
+      console.log(`tx Submited tiwh txHas ${submitionHash}`);
+      return submitionHash;
+    } catch (e) {
+      console.log(e);
+    }
+  } catch (error) {
+    console.log(error);
+    return { error: error.info || error.toString() };
   }
 }

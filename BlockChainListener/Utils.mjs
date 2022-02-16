@@ -4,6 +4,8 @@ import { BlockFrost, blockFrostReq, getProtocolParams } from "./blockfrost.mjs";
 import CoinSelection from "./CoinSelection.mjs";
 import * as dotenv from "dotenv";
 import { prvKey } from "./Wallet/keys.mjs";
+import { policysId } from "../Constants/policyId.mjs";
+import { materials } from "../Constants/assets.mjs";
 
 dotenv.config();
 const ServerAddress = process.env.ADDRESS;
@@ -202,6 +204,29 @@ export async function sendNFTs(address, NFTamount, change) {
     return { error: error.info || error.toString() };
   }
 }
+export const initTx_ = async () => {
+  try {
+    const latest_block = await BlockFrost.blocksLatest();
+    const p = await BlockFrost.epochsParameters(latest_block.epoch);
+    return {
+      linearFee: {
+        minFeeA: p.min_fee_a.toString(),
+        minFeeB: p.min_fee_b.toString(),
+      },
+      minUtxo: "1000000", //p.min_utxo, minUTxOValue protocol paramter has been removed since Alonzo HF. Calulation of minADA works differently now, but 1 minADA still sufficient for now
+      poolDeposit: p.pool_deposit,
+      keyDeposit: p.key_deposit,
+      coinsPerUtxoWord: "34482",
+      maxValSize: 5000,
+      priceMem: 5.77e-2,
+      priceStep: 7.21e-5,
+      maxTxSize: parseInt(p.max_tx_size),
+      slot: parseInt(latest_block.slot),
+    };
+  } catch (e) {
+    console.log(e);
+  }
+};
 
 export async function sendAllTokens(address) {
   const reciverAddress = wasm.Address.from_bech32(address);
@@ -265,3 +290,54 @@ export async function sendAllTokens(address) {
     return { error: error.info || error.toString() };
   }
 }
+
+export function isNFTlegit(nft) {
+  try {
+    //console.log(nft);
+    if (policysId.includes(nft.unit.slice(0, 56))) {
+      return true;
+    }
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
+}
+
+export const isRecipeComplete_ = function (assetsToBurn, asset) {
+  function materialCounter(assetsToBurn, material) {
+    if (assetsToBurn) {
+      //console.log(assetsToBurn);
+
+      const filteredAssets = assetsToBurn.filter((x) => {
+        /*  console.log(
+          `${fromHex(x.unit.slice(56)).toString().replace(/\d+/g, "")}` ==
+            `${material.value}`
+        ); */
+
+        return (
+          `${fromHex(x.unit.slice(56)).toString().replace(/\d+/g, "")}` ==
+          `${material.value}`
+        );
+      });
+      //console.log(filteredAssets);
+      return filteredAssets.length;
+    } else {
+      return 0;
+    }
+  }
+
+  const selectedRecipeData = asset.recipe;
+  // const selectedAssetsData = []
+  //console.log(selectedRecipeData);
+  let selectedAssetData = [];
+  console.log(materials);
+  materials.forEach((material) => {
+    const count = materialCounter(assetsToBurn, material);
+    console.log(count);
+    selectedAssetData.push(count);
+  });
+  console.log(selectedAssetData, selectedRecipeData);
+  return (
+    JSON.stringify(selectedRecipeData) == JSON.stringify(selectedAssetData)
+  );
+};

@@ -62,7 +62,7 @@ function sleep(ms) {
 }
 const ProtocolParameters = await initTx();
 const ttl = ProtocolParameters.slot + 20000;
-const numberofAssets = 50;
+const numberofAssets = 71;
 const assetsGenerator = function (baseName, rawmetadata) {
   let assets = [];
   let metadatas = {};
@@ -96,7 +96,8 @@ async function Mint(ttl) {
 
 const rawmetadataBuilder = function (description, mediaType, src) {
   return {
-    description: description,
+    description: "An official NFT of the Metahagane-CNFT game  ",
+    [`type`]: description,
     files: [
       {
         mediaType: mediaType,

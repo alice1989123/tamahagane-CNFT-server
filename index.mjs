@@ -12,6 +12,10 @@ import {
   getWalletData,
 } from "./Lib/Wallet.mjs";
 import { registerSell } from "./Database/Activesells.mjs";
+import { registerNFT } from "./Database/NFTsRegistry.mjs";
+import { isNFTlegit } from "./BlockChainListener/Utils.mjs";
+import * as assets from "./Constants/assets.mjs";
+import { isRecipeComplete_ } from "./BlockChainListener/Utils.mjs";
 
 dotenv.config();
 
@@ -80,33 +84,52 @@ app.post("/api/forge-weapon", async function (req, res) {
     const addressBench32_1 = req.body.address;
     const balance = req.body.balance;
     const utxos = req.body.utxos;
-    const tokensToBurn = req.body.tokensToBurn;
+    let tokensToBurn = req.body.tokensToBurn;
     const nFTtoForge = req.body.nFTtoForge;
+    const type = nFTtoForge.class;
+    tokensToBurn = tokensToBurn.filter((x) => isNFTlegit(x)); //we checks if tokens are legit
+    console.log(tokensToBurn);
+    const asset = assets.materials
+      .filter((x) => !!x.recipe)
+      .concat(assets.weapons)
+      .filter((x) => `${x.value}` == `${nFTtoForge.value}`)[0];
+    //console.log(isRecipeComplete_(tokensToBurn, asset));
+    if (isRecipeComplete_(tokensToBurn, asset)) {
+      let count;
+      try {
+        count = await registerNFT(nFTtoForge.value);
+      } catch (e) {
+        console.log(e);
+      }
+      const name = `${nFTtoForge.value}${count}`;
+      //console.log(name);
 
-    const response = await ForgeWeapon(
-      addressBench32_1,
-      balance,
-      utxos,
-      {
-        assets: [{ name: nFTtoForge.value, quantity: "1" }],
-        metadatas: {
-          [nFTtoForge.value]: {
-            description: "weapon",
-            files: [
-              {
-                mediaType: "img.png",
-                src: `ipfs://${nFTtoForge.img}`,
-              },
-            ],
-            image: `ipfs://${nFTtoForge.img}`,
-            mediaType: "img.png",
+      const response = await ForgeWeapon(
+        addressBench32_1,
+        balance,
+        utxos,
+        {
+          assets: [{ name: name, quantity: "1" }],
+          metadatas: {
+            [name]: {
+              description: "An official NFT of the Metahagane-CNFT game.",
+              type: type,
+              files: [
+                {
+                  mediaType: "img.png",
+                  src: `ipfs://${nFTtoForge.img}`,
+                },
+              ],
+              image: `ipfs://${nFTtoForge.img}`,
+              mediaType: "img.png",
+            },
           },
         },
-      },
 
-      tokensToBurn
-    );
-    res.send(response);
+        tokensToBurn
+      );
+      res.send(response);
+    }
   } catch (e) {
     console.log(e);
   }

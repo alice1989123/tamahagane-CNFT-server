@@ -11,12 +11,13 @@ import * as CardanoWasm from "@emurgo/cardano-serialization-lib-nodejs";
 import { initTx } from "./Lib/Wallet.mjs";
 import { getKeyAddress } from "./Wallet/keys.mjs";
 import { __wasm } from "@emurgo/cardano-serialization-lib-nodejs";
+import CoinSelection from "./Lib/CoinSelection.mjs";
 
 dotenv.config();
 
-export async function sendAllTokens(sender, reciver) {
+export async function sendAllTokens(sender, reciver, numberofTokens) {
   //we must provide sender prvKeyBech32 , and reciver addressBech32
-  console.log(getKeyAddress(sender));
+  //console.log(getKeyAddress(sender));
 
   const senderBech32 = getKeyAddress(sender).address;
 
@@ -27,16 +28,17 @@ export async function sendAllTokens(sender, reciver) {
   const shelleyReciverAddress = CardanoWasm.Address.from_bech32(reciver);
   const walletBalance = await getWalletBalance(senderBech32);
 
-  const totalMultiAssets = walletBalance.amount.filter(
-    (x) => x.unit !== "lovelace"
-  );
+  const totalMultiAssets = walletBalance.amount
+    .filter((x) => x.unit !== "lovelace")
+    .slice(0, numberofTokens);
+  console.log(totalMultiAssets);
   //console.log(totalMultiAssets);
 
   const value = await amountToValue(totalMultiAssets);
 
   const protocolParameters = await initTx();
 
-  console.log(protocolParameters.minUtxo);
+  //console.log(protocolParameters.minUtxo);
 
   const minAda = CardanoWasm.min_ada_required(
     // Why is min ADA so HIGH??
@@ -59,12 +61,22 @@ export async function sendAllTokens(sender, reciver) {
 
   const utxos = await getUtxos(senderBech32);
 
-  const selection = utxos;
-  selection.forEach((input) => {
+  //console.log(utxos.length);
+
+  CoinSelection.setProtocolParameters(
+    protocolParameters.minUtxo,
+    protocolParameters.linearFee.minFeeA,
+    protocolParameters.linearFee.minFeeB,
+    protocolParameters.maxTxSize
+  );
+
+  const selection = await CoinSelection.randomImprove(utxos, outPuts, 20);
+  //console.log(selection.input);
+  selection.input.forEach((utxos) => {
     txBuilder.add_input(
       CardanoWasm.Address.from_bech32(reciver),
-      input.input(),
-      input.output().amount()
+      utxos.input(),
+      utxos.output().amount()
     );
   });
 

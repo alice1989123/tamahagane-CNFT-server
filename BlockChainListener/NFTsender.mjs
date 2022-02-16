@@ -1,11 +1,12 @@
-import { blockFrostReq } from "./blockfrost.mjs";
+import { blockFrostReq, BlockFrost } from "./blockfrost.mjs";
 import { sendNFTs } from "./Utils.mjs";
+import { policysId } from "../Constants/policyId.mjs";
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: "../.env" });
 
-const policy = "e93ec6209631511713b832e5378f77b587762bc272893a7163ecc46e";
-const address = process.env.ADDRESS;
+const policy = policysId[1];
+const serverAddress = process.env.ADDRESS;
 //console.log(address);
 
 const utxosURL =
@@ -47,20 +48,23 @@ function shuffle(array) {
 }
 
 async function selectTokens(numberofTokens) {
-  const walletData = await getWalletData(address);
-  console.log(walletData);
-  const amount = walletData.amount;
-  const NFTs = amount.filter(
-    // (x) => x.unit.slice(0, 56) == policy);
-    (x) => x.unit !== "lovelace"
-  );
-  const randomNFTs = shuffle(NFTs).slice(0, numberofTokens);
-  randomNFTs.forEach((x) => {
-    x.quantity = "1";
-  });
-  //console.log(`NFTs here`, randomNFTs);
-  //TODO:Implement what happens where there are not more NFTs!
-  return randomNFTs;
+  //Better version it chooses randomly agrouping of the same UTXOs when possible //TODO: HERE IS A BIG ERROR YOU MUST FILTER OUT THE ADAS!!
+  const utxos = await BlockFrost.addressesUtxos(serverAddress);
+  //const suffledutxos = shuffle(utxos); // It is no needed to shuffles since they are minted shuffled!!
+  let amounts = utxos.map((x) => x.amount);
+
+  //amounts = amounts.filter((x) => x.unit.slice(0, 56) == policy);
+
+  let serverTokens = [];
+  for (let i = 0; i < amounts.length; i++) {
+    //console.log(amounts[i]);
+    serverTokens = serverTokens.concat(amounts[i]);
+    serverTokens = serverTokens.filter((x) => x.unit.slice(0, 56) == policy);
+  }
+  // console.log(serverTokens);
+  const selectedTokens = serverTokens.slice(0, numberofTokens);
+  //console.log(selectedTokens);
+  return selectedTokens;
 }
 
 export async function sendTokens(address, numberofTokens, change) {
@@ -68,3 +72,5 @@ export async function sendTokens(address, numberofTokens, change) {
   const tokens = await selectTokens(numberofTokens);
   return sendNFTs(address, tokens, change);
 }
+
+console.log(await selectTokens(10));

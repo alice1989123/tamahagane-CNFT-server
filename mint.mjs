@@ -203,7 +203,7 @@ const sendLoveLaces = async function (
     console.log(vkeyWitnesses.len());
     vkeyWitnesses.add(vkeyWitness);
     console.log(vkeyWitnesses.len());
-      
+
     finalWitnesses.set_vkeys(vkeyWitnesses);
     console.log(finalWitnesses.vkeys().len());
     const transaction = CardanoWasm.Transaction.new(
@@ -239,4 +239,4 @@ const asciiToHex = (str) => {
   return arr.join("");
 };
 
-sendLoveLaces(addressBench32_1, addressBench32_2, lovelaces);
+//sendLoveLaces(addressBench32_1, addressBench32_2, lovelaces);

@@ -56,5 +56,26 @@ export async function getRegisteredTx(collection) {
   }
 }
 
+export async function getLastRegisteredTx(collection) {
+  let result;
+  try {
+    await client.connect();
+    const database = client.db("Tamahagane");
+    const transactions = await database.collection(`${collection}`);
+
+    const cursor = await transactions.find().sort({ $natural: -1 }).limit(1); //findOne().sort({ $natural: -1 });
+    result = await cursor.toArray();
+
+    if (!result) {
+      console.log("No documents found!");
+    }
+  } finally {
+    await client.close();
+    return result;
+  }
+}
+
+console.log(await getLastRegisteredTx("PayedTxs"));
+
 //console.log(await getRegisteredTx());
 //console.log(await getIpfsHash(277));

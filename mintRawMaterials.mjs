@@ -5,7 +5,8 @@ import axios from "axios";
 import CoinSelection from "./Lib/CoinSelection.mjs";
 import { getKeyAddress } from "./Wallet/keys.mjs";
 import dotenv from "dotenv";
-import { metadataBuilder } from "./Lib/Wallet.mjs";
+import { metadataBuilder, initTx } from "./Lib/Wallet.mjs";
+
 dotenv.config();
 
 const addressBench32_1 = process.env.ADDRESS_SECONDARY;
