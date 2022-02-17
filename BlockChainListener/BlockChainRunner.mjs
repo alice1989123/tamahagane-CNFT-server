@@ -8,13 +8,17 @@ function sleep(ms) {
 }
 
 while (true) {
-  try {
-    await sleep(60000);
-    const lastTxConfirmed = await getLastTxConfirmation();
-    if (lastTxConfirmed) {
+  await sleep(60000);
+  console.log("hey");
+  /*  try {
+    //const lastTxConfirmed = await getLastTxConfirmation();
+    console.log("hey");
+
+      if (lastTxConfirmed) {
+      console.log("hey");
       await registerTransactionstoPay();
-    }
+    } 
   } catch (e) {
     console.log(e);
-  }
+  } */
 }
