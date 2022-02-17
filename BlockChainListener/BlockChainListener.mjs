@@ -75,6 +75,7 @@ export const registerTransactionstoPay = async function () {
     } catch (e) {
       console.log(e);
     }
+    console.log(currentDoubts);
     return currentDoubts;
   }
 
@@ -146,8 +147,9 @@ function sleep(ms) {
 
 export async function getLastTxConfirmation() {
   const lastRegister = await getLastRegisteredTx("PayedTxs");
-  const lastHash = lastRegister[0].hash;
-  console.log(lastHash);
+  //console.log(lastRegister);
+  const lastHash = lastRegister[0].tx_hash;
+  //console.log(lastHash);
   const serverTxs = await BlockFrost.addressesTransactions(serverAddress, {
     order: "desc",
   });
@@ -155,3 +157,5 @@ export async function getLastTxConfirmation() {
   //console.log(isTxConfirmed);
   return isTxConfirmed;
 }
+
+//console.log(await getLastTxConfirmation());

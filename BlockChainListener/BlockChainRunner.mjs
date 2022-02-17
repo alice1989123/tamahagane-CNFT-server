@@ -9,16 +9,17 @@ function sleep(ms) {
 
 while (true) {
   await sleep(60000);
-  console.log("hey");
-  /*  try {
-    //const lastTxConfirmed = await getLastTxConfirmation();
-    console.log("hey");
+  try {
+    const lastTxConfirmed = await getLastTxConfirmation();
+    console.log(lastTxConfirmed);
 
-      if (lastTxConfirmed) {
-      console.log("hey");
+    if (lastTxConfirmed) {
+      console.log(
+        "We are fetching the Blockchain to see if any payment has arrived..."
+      );
       await registerTransactionstoPay();
-    } 
+    }
   } catch (e) {
     console.log(e);
-  } */
+  }
 }

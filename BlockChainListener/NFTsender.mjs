@@ -72,5 +72,3 @@ export async function sendTokens(address, numberofTokens, change) {
   const tokens = await selectTokens(numberofTokens);
   return sendNFTs(address, tokens, change);
 }
-
-console.log(await selectTokens(10));
