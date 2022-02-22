@@ -86,6 +86,8 @@ export const registerTransactionstoPay = async function () {
 
   const getDoubtsOuputs = transactionsToPay.map((tx) => classyfyTx(tx));
 
+  console.log(getDoubtsOuputs);
+
   const payDoubs = async function payDoubs() {
     try {
       for (let j = 0; j < getDoubtsOuputs.length; j++) {
@@ -137,9 +139,9 @@ function classyfyTx(Doubt) {
     quantityOfNFTsToSend = 0;
     return { quantityOfNFTsToSend, senderAddress, change, hash };
   }
-  quantityOfNFTsToSend = Math.floor(adarecived / pricePacket) * 5;
+  quantityOfNFTsToSend = Math.floor(adarecived / pricePacket) * 7;
   //console.log(quantityOfNFTsToSend, senderAddress);
-  change = adarecived - quantityOfNFTsToSend * pricePacket * 5;
+  change = adarecived - quantityOfNFTsToSend * pricePacket * 7;
 
   return { quantityOfNFTsToSend, senderAddress, change, hash };
 }
