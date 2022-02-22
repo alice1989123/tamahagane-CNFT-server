@@ -65,6 +65,7 @@ export async function getLastRegisteredTx(collection) {
 
     const cursor = await transactions.find().sort({ $natural: -1 }).limit(1); //findOne().sort({ $natural: -1 });
     result = await cursor.toArray();
+    //console.log(result);
 
     if (!result) {
       console.log("No documents found!");
@@ -75,7 +76,7 @@ export async function getLastRegisteredTx(collection) {
   }
 }
 
-console.log(await getLastRegisteredTx("PayedTxs"));
+//console.log(await getLastRegisteredTx("PayedTxs"));
 
 //console.log(await getRegisteredTx());
 //console.log(await getIpfsHash(277));

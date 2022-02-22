@@ -7,6 +7,10 @@ import {
 } from "../Database/AddressChecker.mjs";
 import { sendTokens } from "./NFTsender.mjs";
 dotenv.config();
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 const serverAddress = process.env.ADDRESS;
 //console.log(serverAddress);
 const pricePacket = 7000000;
@@ -75,7 +79,6 @@ export const registerTransactionstoPay = async function () {
     } catch (e) {
       console.log(e);
     }
-    console.log(currentDoubts);
     return currentDoubts;
   }
 
@@ -141,15 +144,11 @@ function classyfyTx(Doubt) {
   return { quantityOfNFTsToSend, senderAddress, change, hash };
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export async function getLastTxConfirmation() {
   const lastRegister = await getLastRegisteredTx("PayedTxs");
-  //console.log(lastRegister);
-  const lastHash = lastRegister[0].tx_hash;
-  //console.log(lastHash);
+  console.log(lastRegister);
+  const lastHash = lastRegister[0].hash;
+  console.log(lastHash);
   const serverTxs = await BlockFrost.addressesTransactions(serverAddress, {
     order: "desc",
   });
@@ -157,5 +156,3 @@ export async function getLastTxConfirmation() {
   //console.log(isTxConfirmed);
   return isTxConfirmed;
 }
-
-//console.log(await getLastTxConfirmation());

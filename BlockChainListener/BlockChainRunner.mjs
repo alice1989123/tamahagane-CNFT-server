@@ -1,11 +1,14 @@
 import {
   registerTransactionstoPay,
   getLastTxConfirmation,
+  registerpassedTx,
 } from "./BlockChainListener.mjs";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+//registerpassedTx();
 
 while (true) {
   await sleep(60000);
