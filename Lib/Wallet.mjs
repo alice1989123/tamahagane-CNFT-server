@@ -225,7 +225,7 @@ export async function getWalletData(addr) {
 
 export async function getUtxos(addr) {
   const response = await getWalletData(addr);
-  //console.log(response);
+  console.log(response);
 
   let utxos = [];
 
@@ -811,8 +811,12 @@ export function ValuetoAmount(value) {
   }
 }
 
-export async function sendAda(address, lovelaces) {
-  const serverAddress = process.env.ADDRESS;
+export async function sendAda(
+  serverAddress,
+  serverPrvKeys,
+  address,
+  lovelaces
+) {
   const protocolParameters = await initTx();
 
   const reciverAddress = CardanoWasm.Address.from_bech32(address);
@@ -848,7 +852,7 @@ export async function sendAda(address, lovelaces) {
     .coins_per_utxo_word(
       CardanoWasm.BigNum.from_str(protocolParameters.coinsPerUtxoWord)
     );
-  console.log(configBuilder.build());
+  //console.log(configBuilder.build());
 
   const txBuilder = CardanoWasm.TransactionBuilder.new(configBuilder.build());
 
@@ -882,7 +886,7 @@ export async function sendAda(address, lovelaces) {
     const witnesses = tx.witness_set();
 
     const vkeysWitnesses = CardanoWasm.Vkeywitnesses.new();
-    const vkeyWitness = CardanoWasm.make_vkey_witness(txHash, prvKey);
+    const vkeyWitness = CardanoWasm.make_vkey_witness(txHash, serverPrvKeys);
     vkeysWitnesses.add(vkeyWitness);
     witnesses.set_vkeys(vkeysWitnesses);
 

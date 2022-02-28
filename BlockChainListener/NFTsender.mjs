@@ -5,8 +5,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config({ path: "../.env" });
 
-const policy = policysId[1];
-const serverAddress = process.env.ADDRESS;
+const policy = policysId[0];
 //console.log(address);
 
 const utxosURL =
@@ -47,13 +46,9 @@ function shuffle(array) {
   return array;
 }
 
-async function selectTokens(numberofTokens) {
-  //Better version it chooses randomly agrouping of the same UTXOs when possible //TODO: HERE IS A BIG ERROR YOU MUST FILTER OUT THE ADAS!!
-  const utxos = await BlockFrost.addressesUtxos(serverAddress);
-  //const suffledutxos = shuffle(utxos); // It is no needed to shuffles since they are minted shuffled!!
+async function selectTokens(policy, address, numberofTokens) {
+  const utxos = await BlockFrost.addressesUtxos(address);
   let amounts = utxos.map((x) => x.amount);
-
-  //amounts = amounts.filter((x) => x.unit.slice(0, 56) == policy);
 
   let serverTokens = [];
   for (let i = 0; i < amounts.length; i++) {
@@ -67,8 +62,17 @@ async function selectTokens(numberofTokens) {
   return selectedTokens;
 }
 
-export async function sendTokens(address, numberofTokens, change) {
-  console.log(address, numberofTokens, change);
-  const tokens = await selectTokens(numberofTokens);
-  return sendNFTs(address, tokens, change);
+export async function sendTokens(
+  sender,
+  prvKeysSender,
+  address,
+  numberofTokens,
+  change
+) {
+  //console.log(address, numberofTokens, change);
+  const tokens = await selectTokens(policy, sender, numberofTokens);
+  console.log(sender, tokens);
+  return sendNFTs(sender, prvKeysSender, address, tokens, change);
 }
+
+//console.log(await selectTokens(10));

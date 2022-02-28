@@ -11,12 +11,20 @@ const walletKey2 = process.env.WALLET_KEY_SECONDARY;
 function harden(num) {
   return 0x80000000 + num;
 }
-//const walletKey = Bip32PrivateKey.generate_ed25519_bip32().to_bech32();
+/* const walletKey = Bip32PrivateKey.generate_ed25519_bip32().to_bech32();
+const walletKey2 = Bip32PrivateKey.generate_ed25519_bip32().to_bech32();
+ */
+/* console.log(
+  walletKey,
+  walletKey2,
+  getKeyAddress(walletKey).address,
+  getKeyAddress(walletKey2).address
+); */
 
 export const prvKey = getKeyAddress(walletKey).prvKey;
-export const address = getKeyAddress(walletKey).baseAddr;
+export const address = getKeyAddress(walletKey).address;
 export const prvKey2 = getKeyAddress(walletKey2).prvKey;
-export const address2 = getKeyAddress(walletKey2).baseAddr;
+export const address2 = getKeyAddress(walletKey2).address;
 
 export function getKeyAddress(Bip32PrivateKey_) {
   try {
@@ -43,6 +51,7 @@ export function getKeyAddress(Bip32PrivateKey_) {
     );
 
     const address = baseAddr.to_address().to_bech32();
+    //console.log(address);
     const prvKey = accountKey
       .derive(0) // external
       .derive(0)

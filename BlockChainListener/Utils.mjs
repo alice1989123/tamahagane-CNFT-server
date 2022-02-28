@@ -3,7 +3,7 @@ import { languageViews } from "./LanguageViews.mjs";
 import { BlockFrost, blockFrostReq, getProtocolParams } from "./blockfrost.mjs";
 import CoinSelection from "./CoinSelection.mjs";
 import * as dotenv from "dotenv";
-import { prvKey } from "./Wallet/keys.mjs";
+import { prvKey, prvKey2 } from "./Wallet/keys.mjs";
 import { policysId } from "../Constants/policyId.mjs";
 import { materials } from "../Constants/assets.mjs";
 
@@ -104,8 +104,14 @@ export async function getUtxos(addr) {
   return utxos;
 }
 
-export async function sendNFTs(address, NFTamount, change) {
-  //console.log(NFTamount);
+export async function sendNFTs(
+  sender,
+  prvKeysSender,
+  address,
+  NFTamount,
+  change
+) {
+  console.log(sender, prvKeysSender, address, NFTamount, change);
   const protocolParameters = await getProtocolParams();
   const wasmchange = wasm.Value.new(wasm.BigNum.from_str(`${change}`));
 
@@ -138,7 +144,7 @@ export async function sendNFTs(address, NFTamount, change) {
   const reciverAddress = wasm.Address.from_bech32(address);
 
   const txBuilder = await initTx(protocolParameters);
-  const utxos = await getUtxos(ServerAddress);
+  const utxos = await getUtxos(sender);
   //console.log(ServerAddress);
 
   //console.log(value.coin().to_str());
@@ -169,7 +175,7 @@ export async function sendNFTs(address, NFTamount, change) {
     );
   });
   txBuilder.add_output(outPut);
-  txBuilder.add_change_if_needed(wasm.Address.from_bech32(ServerAddress));
+  txBuilder.add_change_if_needed(wasm.Address.from_bech32(sender));
 
   const txBody = txBuilder.build();
 
@@ -182,7 +188,9 @@ export async function sendNFTs(address, NFTamount, change) {
     const witnesses = tx.witness_set();
 
     const vkeysWitnesses = wasm.Vkeywitnesses.new();
-    const vkeyWitness = wasm.make_vkey_witness(txHash, prvKey);
+    //console.log(prvKeysSender);
+
+    const vkeyWitness = wasm.make_vkey_witness(txHash, prvKey2);
     vkeysWitnesses.add(vkeyWitness);
     witnesses.set_vkeys(vkeysWitnesses);
     const transaction = wasm.Transaction.new(

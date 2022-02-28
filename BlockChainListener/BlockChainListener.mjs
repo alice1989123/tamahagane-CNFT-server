@@ -6,13 +6,17 @@ import {
   getRegisteredTx,
 } from "../Database/AddressChecker.mjs";
 import { sendTokens } from "./NFTsender.mjs";
+import * as keys from "../Wallet/keys.mjs";
+
+const addressToBePayed = keys.address;
+const addressSender = keys.address2;
+const prvKeysSender = keys.prvKey2;
+
 dotenv.config();
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-const serverAddress = process.env.ADDRESS;
-//console.log(serverAddress);
 const pricePacket = 7000000;
 
 const getTransactionsUTXOs = async function (hash) {
@@ -26,7 +30,7 @@ const getTransactionsUTXOs = async function (hash) {
 
 export const registerpassedTx = async function () {
   const TransactionsInBlockChain = await BlockFrost.addressesTransactions(
-    serverAddress,
+    addressToBePayed,
     { order: "desc" }
   );
 
@@ -44,7 +48,7 @@ export const registerpassedTx = async function () {
 
 export const registerTransactionstoPay = async function () {
   const TransactionsInBlockChain = await BlockFrost.addressesTransactions(
-    serverAddress,
+    addressToBePayed,
     { order: "desc" }
   );
   //console.log(TransactionsInBlockChain);
@@ -66,13 +70,13 @@ export const registerTransactionstoPay = async function () {
         const hash = details.hash;
         const senderAddress = details.inputs[0].address;
         const outpusToServer = details.outputs.filter(function (x) {
-          return x.address == serverAddress;
+          return x.address == addressToBePayed;
         });
 
         const amountPayedtoServer = outpusToServer
           .map((x) => parseInt(x.amount[0].quantity))
           .reduce((x, y) => x + y, 0);
-        if (senderAddress !== serverAddress) {
+        if (senderAddress !== addressToBePayed) {
           currentDoubts.push([senderAddress, amountPayedtoServer, hash]);
         }
       }
@@ -95,7 +99,13 @@ export const registerTransactionstoPay = async function () {
         const address = getDoubtsOuputs[j].senderAddress;
         const change = 0;
 
-        const hash_ = await sendTokens(address, tokensqty, change);
+        const hash_ = await sendTokens(
+          addressSender,
+          prvKeysSender,
+          address,
+          tokensqty,
+          change
+        );
 
         if (hash_ || tokensqty == 0) {
           await registerTransaction(
@@ -106,7 +116,7 @@ export const registerTransactionstoPay = async function () {
                 change: change,
                 tokensqty: tokensqty,
                 change: change,
-                hash: hash_,
+                tx_hash: hash_,
               },
             ],
             "PayedTxs"
@@ -134,26 +144,28 @@ function classyfyTx(Doubt) {
   let quantityOfNFTsToSend;
   let change;
   //console.log(index);
-  if (senderAddress == serverAddress) {
+  if (senderAddress == addressToBePayed) {
     change = 0;
     quantityOfNFTsToSend = 0;
     return { quantityOfNFTsToSend, senderAddress, change, hash };
   }
   quantityOfNFTsToSend = Math.floor(adarecived / pricePacket) * 7;
   //console.log(quantityOfNFTsToSend, senderAddress);
-  change = adarecived - quantityOfNFTsToSend * pricePacket * 7;
+  change = 0;
 
   return { quantityOfNFTsToSend, senderAddress, change, hash };
 }
 
 export async function getLastTxConfirmation() {
   const lastRegister = await getLastRegisteredTx("PayedTxs");
-  console.log(lastRegister);
-  const lastHash = lastRegister[0].hash;
-  console.log(lastHash);
-  const serverTxs = await BlockFrost.addressesTransactions(serverAddress, {
+  //console.log(lastRegister);
+  const lastHash = lastRegister[0].tx_hash;
+  //console.log(lastHash);
+  const serverTxs = await BlockFrost.addressesTransactions(addressSender, {
     order: "desc",
   });
+  //console.log(addressToBePayed);
+  //console.log(serverTxs.map((x) => x.tx_hash).slice(0, 5));
   const isTxConfirmed = serverTxs.map((x) => x.tx_hash).includes(lastHash);
   //console.log(isTxConfirmed);
   return isTxConfirmed;

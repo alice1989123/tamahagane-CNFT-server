@@ -14,7 +14,7 @@ while (true) {
   await sleep(60000);
   try {
     const lastTxConfirmed = await getLastTxConfirmation();
-    console.log(lastTxConfirmed);
+    //console.log(lastTxConfirmed);
 
     if (lastTxConfirmed) {
       console.log(
