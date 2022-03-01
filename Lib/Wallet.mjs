@@ -459,8 +459,8 @@ export async function ForgeWeapon(
   tokensToBurn
 ) {
   const protocolParameters = await initTx();
-  const addressBench32_1 = process.env.ADDRESS_SECONDARY; // Addres used in the policy the same Address used for minting
-  const signingPrvKey = getKeyAddress(process.env.WALLET_KEY_SECONDARY).prvKey;
+  const addressBench32_1 = process.env.ADDRESS; // Addres used in the policy the same Address used for minting
+  const signingPrvKey = getKeyAddress(process.env.WALLET_KEY).prvKey;
 
   const policy = await createLockingPolicyScript(
     addressBench32_1,
@@ -574,23 +574,6 @@ export async function ForgeWeapon(
     );
 
     const selection = await CoinSelection.randomImprove(utxos_, _outputs, 20);
-
-    //Sends the user back the ADA he sends with the tokens beeing burned
-
-    /* const OutputToUserBack = CardanoWasm.TransactionOutput.new(
-      address,
-      checkValueBurning
-    ); */
-
-    /* const OutputsToUserBack = CardanoWasm.TransactionOutputs.new();
-    OutputsToUserBack.add(OutputToUserBack); */
-    //console.log(OutputsToUserBack.get(0).amount().coin().to_str());
-
-    /*    const selectedUtxosBurningAddress = await CoinSelection.randomImprove(
-      utxosBurningAddress,
-      OutputsToUserBack,
-      20
-    ); */
 
     const nativeScripts = CardanoWasm.NativeScripts.new();
     nativeScripts.add(policy.script);

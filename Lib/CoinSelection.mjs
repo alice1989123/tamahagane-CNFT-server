@@ -365,6 +365,8 @@ function randomSelect(utxoSelection, outputAmount, limit) {
     throw new Error("INPUT_LIMIT_EXCEEDED");
   }
 
+  console.log(outputAmount, utxoSelection.amount);
+
   if (nbFreeUTxO <= 0) {
     throw new Error("INPUTS_EXHAUSTED");
   }
@@ -669,9 +671,13 @@ function isQtyFulfilled(outputAmount, cumulatedAmount, nbFreeUTxO) {
         CardanoWasm.BigNum.from_str(protocolParameters.coinsPerUtxoWord)
       )
     );
+    console.log(
+      minAmount.coin().to_str(),
+      compare(cumulatedAmount, minAmount) < 0
+    );
 
     // Lovelace min amount to cover assets and number of output need to be met
-    if (compare(cumulatedAmount, minAmount) < 0) return false;
+    //if (compare(cumulatedAmount, minAmount) < 0) return false;
 
     // Try covering the max fees
     if (nbFreeUTxO > 0) {
