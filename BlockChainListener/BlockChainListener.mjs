@@ -158,9 +158,9 @@ function classyfyTx(Doubt) {
 
 export async function getLastTxConfirmation() {
   const lastRegister = await getLastRegisteredTx("PayedTxs");
-  //console.log(lastRegister);
+  console.log(lastRegister);
   const lastHash = lastRegister[0].tx_hash;
-  //console.log(lastHash);
+  console.log(lastHash);
   const serverTxs = await BlockFrost.addressesTransactions(addressSender, {
     order: "desc",
   });
