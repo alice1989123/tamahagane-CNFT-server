@@ -11,7 +11,7 @@ function sleep(ms) {
 //registerpassedTx();
 
 while (true) {
-  await sleep(20000);
+  await sleep(60000);
   try {
     const lastTxConfirmed = await getLastTxConfirmation();
     console.log(lastTxConfirmed);
