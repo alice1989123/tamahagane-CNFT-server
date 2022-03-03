@@ -30,7 +30,7 @@ const getTransactionsUTXOs = async function (hash) {
 
 export const registerpassedTx = async function () {
   const TransactionsInBlockChain = await BlockFrost.addressesTransactions(
-    addressToBePayed,
+    addressSender,
     { order: "desc" }
   );
 
@@ -165,7 +165,7 @@ export async function getLastTxConfirmation() {
     order: "desc",
   });
   //console.log(addressToBePayed);
-  //console.log(serverTxs.map((x) => x.tx_hash).slice(0, 5));
+  console.log(serverTxs.map((x) => x.tx_hash).slice(0, 5));
   const isTxConfirmed = serverTxs.map((x) => x.tx_hash).includes(lastHash);
   //console.log(isTxConfirmed);
   return isTxConfirmed;
