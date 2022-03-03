@@ -107,7 +107,7 @@ export const registerTransactionstoPay = async function () {
           change
         );
 
-        if (hash_ || tokensqty == 0) {
+        if (hash_) {
           await registerTransaction(
             [
               {
