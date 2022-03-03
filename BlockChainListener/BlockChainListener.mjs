@@ -161,6 +161,9 @@ export async function getLastTxConfirmation() {
   console.log(lastRegister);
   const lastHash = lastRegister[0].tx_hash;
   console.log(lastHash);
+  if (lastHash == "There were no tokens sent") {
+    return true;
+  }
   const serverTxs = await BlockFrost.addressesTransactions(addressSender, {
     order: "desc",
   });
