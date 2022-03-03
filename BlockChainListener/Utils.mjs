@@ -130,16 +130,8 @@ export async function sendNFTs(
   }
   if (NFTamount.length == 0) {
     //console.log(change, protocolParameters.minUtxo + 500000);
-    if (change <= parseInt(protocolParameters.minUtxo) + 500000) {
-      console.log("not enought ADA to make a refund");
-      return "There were no tokens sent";
-    }
 
-    NFTValue = wasmchange.checked_sub(
-      wasm.Value.new(wasm.BigNum.from_str("500000"))
-    );
-    value = NFTValue;
-    totalValue = NFTValue;
+    return "There were no tokens sent";
   }
   const reciverAddress = wasm.Address.from_bech32(address);
 
