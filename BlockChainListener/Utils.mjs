@@ -111,7 +111,7 @@ export async function sendNFTs(
   NFTamount,
   change
 ) {
-  console.log(sender, prvKeysSender, address, NFTamount, change);
+  //console.log(sender, prvKeysSender, address, NFTamount, change);
   const protocolParameters = await getProtocolParams();
   const wasmchange = wasm.Value.new(wasm.BigNum.from_str(`${change}`));
 
