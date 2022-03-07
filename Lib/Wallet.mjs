@@ -461,9 +461,9 @@ export async function ForgeWeapon(
   const protocolParameters = await initTx();
   const addressBench32_1 = process.env.ADDRESS; // Addres used in the policy the same Address used for minting
   const signingPrvKey = getKeyAddress(process.env.WALLET_KEY).prvKey;
-
+  console.log(process.env.ADDRESS_2, process.env.ADDRESS);
   const policy = await createLockingPolicyScript(
-    addressBench32_1,
+    process.env.ADDRESS,
     protocolParameters
   );
 

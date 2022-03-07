@@ -13,8 +13,8 @@ function harden(num) {
 }
 /* const walletKey = Bip32PrivateKey.generate_ed25519_bip32().to_bech32();
 const walletKey2 = Bip32PrivateKey.generate_ed25519_bip32().to_bech32();
- */
-/* console.log(
+
+console.log(
   walletKey,
   walletKey2,
   getKeyAddress(walletKey).address,
@@ -25,6 +25,9 @@ export const prvKey = getKeyAddress(walletKey).prvKey;
 export const address = getKeyAddress(walletKey).address;
 export const prvKey2 = getKeyAddress(walletKey2).prvKey;
 export const address2 = getKeyAddress(walletKey2).address;
+
+/* console.log(getKeyAddress(walletKey).address);
+console.log(getKeyAddress(walletKey2).address); */
 
 export function getKeyAddress(Bip32PrivateKey_) {
   try {
