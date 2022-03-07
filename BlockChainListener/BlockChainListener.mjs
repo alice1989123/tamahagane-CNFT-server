@@ -30,7 +30,7 @@ const getTransactionsUTXOs = async function (hash) {
 
 export const registerpassedTx = async function () {
   const TransactionsInBlockChain = await BlockFrost.addressesTransactions(
-    addressSender,
+    addressToBePayed,
     { order: "desc" }
   );
 

@@ -48,17 +48,35 @@ function shuffle(array) {
 
 async function selectTokens(policy, address, numberofTokens) {
   const utxos = await BlockFrost.addressesUtxos(address);
-  let amounts = utxos.map((x) => x.amount);
 
+  let amounts = utxos.map((x) => x.amount);
+  amounts = shuffle(amounts);
   let serverTokens = [];
-  for (let i = 0; i < amounts.length; i++) {
-    //console.log(amounts[i]);
-    serverTokens = serverTokens.concat(amounts[i]);
-    serverTokens = serverTokens.filter((x) => x.unit.slice(0, 56) == policy);
+  let filteredAmounts = [];
+  amounts.forEach((x) => {
+    const filtered = x.filter((x) => x.unit.slice(0, 56) == policy);
+    filteredAmounts.push(filtered);
+  });
+  // console.log(filteredAmounts.length);
+
+  let neededamounts = [];
+  let acummulator = 0;
+  for (let i = 0; i < filteredAmounts.length; i++) {
+    if (acummulator >= numberofTokens) {
+      break;
+    }
+    neededamounts.push(filteredAmounts[i]);
+
+    acummulator = acummulator + filteredAmounts[i].length;
   }
-  // console.log(serverTokens);
-  const selectedTokens = serverTokens.slice(0, numberofTokens);
-  //console.log(selectedTokens);
+  //console.log(filteredAmounts.length);
+  console.log(neededamounts.length);
+  for (let i = 0; i < neededamounts.length; i++) {
+    //console.log(amounts[i]);
+    serverTokens = [...serverTokens, ...neededamounts[i]];
+  }
+  const selectedTokens = shuffle(serverTokens).slice(0, numberofTokens);
+  console.log(selectedTokens.length);
   return selectedTokens;
 }
 
@@ -75,4 +93,4 @@ export async function sendTokens(
   return sendNFTs(sender, prvKeysSender, address, tokens, change);
 }
 
-//console.log(await selectTokens(10));
+//console.log(await selectTokens(policy, process.env.ADDRESS_SECONDARY, 35));
